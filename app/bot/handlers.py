@@ -1,6 +1,7 @@
 from aiogram import Router, F
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery
+import html
 
 from app.bot.keyboards import get_main_keyboard
 from app.database.crud import get_latest_formatted_news
@@ -43,11 +44,11 @@ async def send_latest_news(callback: CallbackQuery):
         return
     
     # Використовуємо відформатовані дані від ШІ[cite: 4]
-    title = news.formatted_title or news.title
-    summary = news.formatted_summary or news.summary
-    analysis = news.formatted_analysis or "No analysis available."
-    time = news.published_date.strftime("%Y-%m-%d %H:%M:%S") if news.published_date else "Unknown time"
-    location = news.location or "No category"
+    title = html.escape(news.formatted_title or news.title or "Без назви")
+    summary = html.escape(news.formatted_summary or news.summary or "")
+    analysis = html.escape(news.formatted_analysis or "")
+    time = html.escape(news.published_date.strftime("%Y-%m-%d %H:%M:%S") if news.published_date else "Unknown time")
+    location = html.escape(news.location or "No category")
     text = f"🗞 <b>{title}</b>\n\n📝 {summary}\n\n📊 {analysis}\n\n📍 <i>{location}</i>\n\n⏰ <i>{time}</i>"
     
     await callback.message.answer(text, parse_mode="HTML")

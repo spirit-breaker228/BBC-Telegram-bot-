@@ -79,7 +79,9 @@ async def process_unformatted_news():
                             temperature=0.3,
                         ),
                     )
-
+                    if not response or not response.parsed:
+                        print(f"⚠️ Unavailable response for ID: {news_item.id}")
+                        continue    
                     ai_data = response.parsed
                     news_item.formatted_title = ai_data.title
                     news_item.formatted_summary = ai_data.summary

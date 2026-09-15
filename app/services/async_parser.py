@@ -23,7 +23,8 @@ async def fetch_page(session, page, url, headers):
     for item in news:
         news_title = item.get("title")
         news_sum = item.get("summary")
-
+        if not news_title or not news_sum:
+            continue  # Skip if title or summary is missing
         topics = item.get("topics") or []
 
         news_location = topics[0] if topics else "Без категорії"

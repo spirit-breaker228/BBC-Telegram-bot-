@@ -25,7 +25,7 @@ async def get_latest_formatted_news():
         stmt = (
             select(News)
             .where(News.is_formatted == True)
-            .order_by(News.id.desc())
+            .order_by(News.published_date.desc())
             .limit(1)
         )
         result = await session.execute(stmt)
