@@ -1,7 +1,7 @@
 from app.database.engine import SessionLocal
 from sqlalchemy import select
 from app.database.models import News
-
+from app.database.models import Users
 
 async def save_news(news_list):
     async with SessionLocal() as session:
@@ -30,3 +30,22 @@ async def get_latest_formatted_news():
         )
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
+
+async def register_or_update_user(telegram_id: int, subscribed: bool):
+    async with SessionLocal() as session:
+        stmt = select(Users).where(Users.telegram_id == telegram_id)
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+        if user:
+            user.is_subscribed = subscribed
+        else: 
+            session.add(Users(telegram_id=telegram_id, is_subscribed=subscribed))
+        await session.commit()
+async def get_user_subscription_status():
+    async with SessionLocal() as session:
+        stmt = select(Users).where(Users.is_subscribed == True)
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+        if user:
+            return user.is_subscribed
+    return False

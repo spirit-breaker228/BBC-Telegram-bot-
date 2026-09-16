@@ -1,4 +1,4 @@
-from sqlalchemy import String, Text, DateTime
+from sqlalchemy import BigInteger, String, Text, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database.engine import Base
 from datetime import datetime  
@@ -23,3 +23,9 @@ class News(Base):
     # Flag to indicate if the news has been formatted by AI
     is_published: Mapped[bool] = mapped_column(default=False, nullable=False)
     is_formatted: Mapped[bool] = mapped_column(default=False, nullable=False)
+
+class Users(Base):
+    __tablename__ = 'users'
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True    )
+    telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
+    is_subscribed: Mapped[bool] = mapped_column(default=False, nullable=False)

@@ -4,6 +4,13 @@ def get_main_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="🗞 Latest News", callback_data="get_latest_news")],
-            [InlineKeyboardButton(text="🔔 Subscribe to Newsletter", callback_data="subscribe")]
+            [InlineKeyboardButton(text="📩 Subscribe to Newsletter", callback_data="subscribe")]
+        ]
+    )
+def get_subscribe_keyboard():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📤 Unsubscribe from Newsletter", callback_data="unsubscribe")],
+            [InlineKeyboardButton(text="🗞 Latest News", callback_data="get_latest_news")]
         ]
     )
