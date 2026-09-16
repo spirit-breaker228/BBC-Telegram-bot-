@@ -4,6 +4,7 @@ from aiogram import Bot, Dispatcher
 from app.config import BOT_TOKEN
 from app.bot.handlers import router
 from app.bot.admin_hanglers import admin_router
+from app.bot.news_hanglers import news_router
 from app.database.engine import engine
 from app.database.engine import Base
 
@@ -17,6 +18,7 @@ async def main():
     dp = Dispatcher()
     dp.include_router(router)
     dp.include_router(admin_router)
+    dp.include_router(news_router)
 
     # Delete webhook and drop pending updates to ensure the bot starts fresh
     await bot.delete_webhook(drop_pending_updates=True)

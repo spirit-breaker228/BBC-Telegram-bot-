@@ -31,6 +31,12 @@ async def get_latest_formatted_news():
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
+async def get_latest_5_formatted_news():
+    async with SessionLocal() as session:
+        stmt = select(News).where(News.is_formatted == True).order_by(News.published_date.desc()).limit(5)
+        result = await session.execute(stmt)
+        return list(result.scalars().all())
+    
 async def register_or_update_user(telegram_id: int, subscribed: bool):
     async with SessionLocal() as session:
         stmt = select(Users).where(Users.telegram_id == telegram_id)
@@ -41,6 +47,7 @@ async def register_or_update_user(telegram_id: int, subscribed: bool):
         else: 
             session.add(Users(telegram_id=telegram_id, is_subscribed=subscribed))
         await session.commit()
+
 async def get_user_subscription_status():
     async with SessionLocal() as session:
         stmt = select(Users).where(Users.is_subscribed == True)
