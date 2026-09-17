@@ -7,7 +7,8 @@ from app.bot.admin_hanglers import admin_router
 from app.bot.news_hanglers import news_router
 from app.database.engine import engine
 from app.database.engine import Base
-
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from app.services.scheduler import run_scheduler
 
 async def main():
     logging.basicConfig(level=logging.INFO)
@@ -19,7 +20,9 @@ async def main():
     dp.include_router(router)
     dp.include_router(admin_router)
     dp.include_router(news_router)
-
+    scheduler = AsyncIOScheduler(timzone="Europe/Kiev")
+    job = scheduler.add_job(run_scheduler, "interval", seconds=15, kwargs={'bot': bot})
+    scheduler.start()
     # Delete webhook and drop pending updates to ensure the bot starts fresh
     await bot.delete_webhook(drop_pending_updates=True)
     print("🤖 Start!")
