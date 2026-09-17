@@ -3,8 +3,8 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 import html
 
-from app.bot.keyboards import get_main_keyboard, get_subscribe_keyboard, get_news_keyboard, NewsPaginatorCallback
-from app.database.crud import get_latest_formatted_news, register_or_update_user, get_latest_5_formatted_news
+from app.bot.keyboards import get_main_keyboard, get_subscribe_keyboard, get_news_keyboard, get_region_keyboard,NewsPaginatorCallback, RegionNewsCallback
+from app.database.crud import get_latest_formatted_news, register_or_update_user, get_latest_5_formatted_news, get_news_by_region
 
 news_router = Router()
 
@@ -46,7 +46,30 @@ async def process_news_pagination(callback: CallbackQuery, callback_data: NewsPa
         await callback.message.edit_text(text, parse_mode="HTML", reply_markup=markup)
     except Exception as e:
         await callback.answer(f"Error: {str(e)}", show_alert=True)
-        
+
 @news_router.callback_query(F.data == "ignore")
 async def ignore_click(callback: CallbackQuery):
     await callback.answer()
+
+@news_router.callback_query(F.data == "open_regions_menu")
+async def inline_show_regions(callback: CallbackQuery):
+    await callback.message.edit_text(
+        "🌍 Choose a region:",
+        reply_markup=get_region_keyboard()
+    )
+    await callback.answer()
+
+@news_router.callback_query(RegionNewsCallback.filter())
+async def show_region(callback: CallbackQuery, callback_data: RegionNewsCallback):
+    region_name = callback_data.region  
+    page = callback_data.page
+
+    news_list = await get_news_by_region(region_name) 
+    if not news_list:
+        await callback.answer("⚠️ No news available for this region.", show_alert=True)
+        return  
+
+    current_page = page
+    text = single_slide(news_list[page], page, len(news_list))
+    markup = get_region_keyboard(region_name, page, len(news_list))
+    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=markup)

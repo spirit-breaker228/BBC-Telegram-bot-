@@ -21,7 +21,7 @@ async def main():
     dp.include_router(admin_router)
     dp.include_router(news_router)
     scheduler = AsyncIOScheduler(timzone="Europe/Kiev")
-    job = scheduler.add_job(run_scheduler, "interval", seconds=15, kwargs={'bot': bot})
+    job = scheduler.add_job(run_scheduler, "interval", hours=2, kwargs={'bot': bot})
     scheduler.start()
     # Delete webhook and drop pending updates to ensure the bot starts fresh
     await bot.delete_webhook(drop_pending_updates=True)

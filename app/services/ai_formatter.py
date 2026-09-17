@@ -89,12 +89,12 @@ async def process_unformatted_news():
                     news_item.is_formatted = True  
                     print("✅ Success!")
                     await session.commit() 
-                    await asyncio.sleep(5)  
+                    await asyncio.sleep(10)  
                 except Exception as e:
                     print(f"❌ Error processing news: {e}")
                     if attempt < max_retries - 1:
                         print("Retrying...")
-                        await asyncio.sleep(8) 
+                        await asyncio.sleep(10) 
                     else:
                         print("All attempts failed. Skipping this news item.")
 

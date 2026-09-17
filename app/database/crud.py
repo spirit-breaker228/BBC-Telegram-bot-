@@ -56,3 +56,8 @@ async def get_user_subscription_status():
         if user:
             return user.is_subscribed
     return False
+async def get_news_by_region(location_name):
+    async with SessionLocal() as session:
+        stmt = select(News).where(News.is_formatted == True, News.location == location_name).order_by(News.published_date.desc())
+        result = await session.execute(stmt)
+        return result.scalars().all()
