@@ -9,9 +9,6 @@ from app.database.engine import SessionLocal
 from app.database.models import News
 from app.config import API_TOKEN
 
-# ==========================================
-# 1. SETUP
-# ==========================================
 
 client = genai.Client(api_key=API_TOKEN)
 
@@ -30,12 +27,6 @@ This Pydantic model defines the expected structure of the AI's response for form
     analysis: str = Field(
         description="General objective analysis of the situation, context or possible consequences of this event."
     )
-
-
-# ==========================================
-# 2. MAIN FUNCTION
-# ==========================================
-
 
 async def process_unformatted_news():
     """

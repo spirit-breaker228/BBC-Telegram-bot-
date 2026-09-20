@@ -3,7 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from app.config import BOT_TOKEN
 from app.bot.handlers import router
-from app.bot.admin_hanglers import admin_router
+from app.bot.admin_handlers import admin_router
 from app.bot.news_handlers import news_router
 from app.database.engine import engine
 from app.database.engine import Base
