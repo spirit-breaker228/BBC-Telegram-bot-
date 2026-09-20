@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher
 from app.config import BOT_TOKEN
 from app.bot.handlers import router
 from app.bot.admin_hanglers import admin_router
-from app.bot.news_hanglers import news_router
+from app.bot.news_handlers import news_router
 from app.database.engine import engine
 from app.database.engine import Base
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
