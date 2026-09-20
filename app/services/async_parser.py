@@ -30,11 +30,9 @@ async def fetch_page(session, page, url, headers):
         news_location = topics[0] if topics else "Без категорії"
 
         news_time = item.get("lastPublishedAt")
-
-        news_time = item.get("lastPublishedAt")
         if news_time:
-            date_str = news_time.split("T")[0]
-            published_date = datetime.strptime(date_str, "%Y-%m-%d")
+            date_str = clean_time = news_time.split(".")[0].replace("Z", "")
+            published_date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
         else:
             published_date = datetime.now()
         page_data.append(

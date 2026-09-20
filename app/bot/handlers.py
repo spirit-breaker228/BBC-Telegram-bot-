@@ -8,8 +8,8 @@ from app.database.crud import get_latest_formatted_news, register_or_update_user
 
 router = Router()
 
-
 @router.message(CommandStart())
+@router.message(Command("menu"))
 async def cmd_start(message: Message):
     await register_or_update_user(telegram_id=message.from_user.id, subscribed=False)
     welcome_text = (

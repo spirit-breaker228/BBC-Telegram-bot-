@@ -59,7 +59,7 @@ async def process_unformatted_news():
             print(f"Processing: {news_item.title[:10]}...")
 
             prompt = f"Original title: {news_item.title}\nOriginal text: {news_item.summary}"
-            max_retries = 3
+            max_retries = 5
             for attempt in range(max_retries):
                 try:
                   

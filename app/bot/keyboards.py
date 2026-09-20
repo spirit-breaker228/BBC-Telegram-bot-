@@ -1,3 +1,5 @@
+from typing import Optional
+
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters.callback_data import CallbackData
 from aiogram.utils.keyboard import InlineKeyboardBuilder 
@@ -12,8 +14,8 @@ def get_main_keyboard():
 def get_subscribe_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="📤 Unsubscribe from Newsletter", callback_data="unsubscribe")],
             [InlineKeyboardButton(text="🗞 Latest News", callback_data="get_latest_news")],
+            [InlineKeyboardButton(text="📤 Unsubscribe from Newsletter", callback_data="unsubscribe")],
             [InlineKeyboardButton(text="🌍 Regions", callback_data="open_regions_menu")]
         ]
     )
@@ -38,7 +40,7 @@ def get_news_keyboard(current_page: int, totals: int):
 
 class RegionNewsCallback(CallbackData, prefix="reg_news"):
     page : int
-    region : str
+    region : Optional[str] = None
 
 def get_region_keyboard(region_name: str = None, page: int = 0, totals: int = 0):
     builder = InlineKeyboardBuilder()
@@ -48,5 +50,11 @@ def get_region_keyboard(region_name: str = None, page: int = 0, totals: int = 0)
         builder.button(
             text= reg, callback_data = RegionNewsCallback(region= reg, page = 0).pack()
         )
-        builder.adjust(1)
-        return builder.as_markup()
+    builder.adjust(1)
+    paginator_builder = InlineKeyboardBuilder()
+    paginator_builder.button(text="⬅️ Previous", callback_data=RegionNewsCallback(region=region_name, page=page-1 if page > 0 else totals - 1).pack())
+    paginator_builder.button(text=f"Page {page + 1}/{totals}", callback_data="ignore")
+    paginator_builder.button(text="➡️ Next", callback_data=RegionNewsCallback(region=region_name, page=page+1 if page < totals - 1 else 0).pack())
+    paginator_builder.adjust(3)
+    builder.attach(paginator_builder)
+    return builder.as_markup()
