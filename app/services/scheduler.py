@@ -4,7 +4,7 @@ from app.database.crud import get_latest_5_formatted_news, get_user_subscription
 from app.services.async_parser import run_parser
 from app.services.ai_formatter import process_unformatted_news
 from app.bot.keyboards import get_news_keyboard
-from app.bot.news_hanglers import single_slide
+from app.bot.news_handlers import single_slide
 
 async def run_scheduler(bot):
     print("🕒 Scheduler started.")
