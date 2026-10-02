@@ -1,153 +1,271 @@
 # 📰 BBC News AI-Powered Telegram Bot & Automated Pipeline
 
-An asynchronous automated pipeline (ETL) and Telegram bot designed for scraping, AI-driven analysis, formatting, and publishing BBC news.
+An asynchronous Telegram bot and automated ETL pipeline for collecting BBC news, storing articles, processing them with Google Gemini AI, and delivering concise, structured news through an interactive Telegram interface.
 
-Built with **aiogram 3.x**, **SQLAlchemy 2.0 Async**, and **Google Gemini AI**.
+Built with **Python**, **aiogram 3.x**, **SQLAlchemy 2.0 Async**, **APScheduler**, and **Google Gemini AI**.
 
 ---
 
-## 📌 Features
+## 📌 Overview
 
-* **Async News Scraping**: Asynchronous fetching of news from BBC sources.
-* **Deduplication Engine**: Database-level verification based on news titles to prevent duplicate records.
-* **AI Formatting & Analysis**: Processing raw news via Google Gemini AI to generate structured titles, summaries, and analytical breakdowns.
-* **Interactive Pagination**: Dynamic inline button navigation allowing users to browse news slides seamlessly.
-* **Admin Access Control**: Custom `IsAdminFilter` restricts administrative operations to authorized users.
-* **Reliable Session Management**: Configured SQLAlchemy session factory with `expire_on_commit=False` to safely access model attributes outside active sessions.
-* **User Subscription Management**: Automatic user registration upon interaction and subscription status tracking (`subscribed: True/False`) for broadcast updates.
+The project combines a Telegram bot with an automated news-processing pipeline.
+
+The application periodically collects news from BBC, stores raw articles in a database, processes unformatted articles using Google Gemini AI, and makes the resulting content available through an interactive Telegram interface.
+
+The system is organized into separate layers for:
+
+- Telegram interaction
+- Database access
+- News parsing
+- AI processing
+- Background scheduling
+
+## ✨ Features
+
+### 📰 Async News Scraping
+- Asynchronous BBC news collection.
+- Extraction of article metadata.
+- Storage of collected articles in the database.
+- Processing of newly discovered articles without blocking the Telegram event loop.
+
+### 🗄 Database Persistence
+The application uses SQLAlchemy 2.0 Async for database access. Stored news contains information such as:
+- original title;
+- summary;
+- geographical region;
+- publication date;
+- AI-generated title;
+- AI-generated summary;
+- AI-generated analysis;
+- formatting status.
+
+### 🔎 News Deduplication
+Before inserting a new article, the application checks whether a corresponding news record already exists. The current deduplication approach uses the article title as the identifying value.
+
+> **Note:** Title-based deduplication is suitable for the current project but is not a perfect article identity strategy. A stable article URL or source-specific article ID would be a stronger production solution.
+
+### 🤖 AI Formatting & Analysis
+Raw news articles are processed through Google Gemini AI. The AI processing layer generates structured content such as:
+- improved title;
+- concise summary;
+- analytical breakdown.
+
+The formatting process is separated from the parser so that news collection and AI processing remain independent components.
+
+### 📄 Interactive Pagination
+Users can browse processed news through Telegram inline keyboards. Pagination supports:
+- previous article/page;
+- next article/page;
+- current page indicator;
+- cyclic navigation.
+
+Database queries use `LIMIT` and `OFFSET` instead of loading the complete dataset into memory.
+
+### 🌍 Regional News
+Users can select a geographical region and browse only news associated with that region. Regional pagination preserves both `region` and `page` inside Telegram callback data. This allows every callback to contain the information required to reconstruct the current navigation state.
+
+### 👤 User Registration & Subscriptions
+Users are registered when they interact with the bot. The database stores subscription status (`is_subscribed = True` / `is_subscribed = False`). Opening `/start` or `/menu` does not implicitly change the user's subscription state. Subscription is handled as a separate user action.
+
+### ⏰ Automated Background Pipeline
+APScheduler runs the news-processing workflow periodically:
+```text
+BBC Parser ──► Save new articles ──► AI Formatter ──► Formatted articles
+```
+This allows news processing to happen independently from user requests.
+
+### 🔐 Admin Access
+Administrative functionality is separated from normal user functionality. Admin operations can be restricted based on the configured administrator access logic.
 
 ---
 
 ## 🛠 Tech Stack
 
-| Component | Technology | Description |
-|---|---|---|
-| **Language** | Python 3.10+ | Core programming language |
-| **Bot Framework** | `aiogram 3.x` | Asynchronous framework for Telegram Bot API |
-| **ORM / Database** | `SQLAlchemy 2.0` + `aiosqlite` | Asynchronous ORM and database engine|
-| **AI Integration** | `Google Gemini API` | Generative AI for news summary and analytical formatting |
-| **Environment Management** | `python-dotenv` | Secure environment variable configuration|
+| Component | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Language** | Python 3.10+ | Core application language |
+| **Bot Framework** | aiogram 3.x | Telegram Bot API and asynchronous handlers |
+| **ORM / Database** | SQLAlchemy 2.0 | ORM and database access |
+| **Database Driver** | aiosqlite | Asynchronous SQLite access |
+| **Scheduler** | APScheduler | Periodic background jobs |
+| **AI Integration** | Google Gemini API | News summarization and analysis |
+| **Async Runtime** | asyncio | Asynchronous application execution |
+| **Configuration** | python-dotenv | Environment variable management |
 
 ---
 
-## 📋 Prerequisites & API Requirements
+## 🏗 Project Architecture
 
-To run this project fully, you need:
-1. **Python 3.10+** installed on your system.
-2. **Telegram Bot Token** obtained via [@BotFather](https://t.me/BotFather).
-3. **Google Gemini API Key** obtained from [Google AI Studio](https://aistudio.google.com/):
-   > ⚠️ **Note on Gemini API**: An active **Google Gemini API Key** (Free Tier or Pay-As-You-Go subscription) is **required** for the AI formatting engine (`process_unformatted_news`) to analyze, summarize, and format raw news articles. Make sure your API quota covers your parsing volume.
+The application is divided into three primary areas:
+
+```text
+app/
+├── bot/
+├── database/
+└── services/
+```
+
+### Bot Layer
+Responsible for:
+- Telegram commands;
+- callback queries;
+- user interaction;
+- message rendering;
+- inline keyboards;
+- news navigation.
+
+### Database Layer
+Responsible for:
+- SQLAlchemy engine;
+- ORM models;
+- database sessions;
+- CRUD operations;
+- pagination queries;
+- region filtering;
+- user persistence.
+
+### Services Layer
+Responsible for application-level operations outside the Telegram interface:
+- BBC news parsing;
+- AI formatting;
+- scheduled processing.
 
 ---
 
-## 🏗 Project Structure
+## 📂 Project Structure
 
 ```text
 bbc-project/
+│
 ├── app/
+│   │
 │   ├── bot/
-│   │   ├── filters.py          # Access control filters (IsAdminFilter)
-│   │   ├── handlers.py         # Main command & callback routers
-│   │   ├── admin_handlers.py   # Administrative command routers
-│   │   ├── news_handlers.py    # News display & pagination routers
-│   │   ├── keyboards.py        # Inline keyboards & pagination builders
-│   │   └── test_main.py        # Bot execution test module
+│   │   ├── admin_handlers.py    # Administrative Telegram handlers
+│   │   ├── handlers.py          # Main bot commands and callbacks
+│   │   ├── keyboards.py         # Inline keyboard builders
+│   │   ├── main.py              # Application entry point
+│   │   └── news_handlers.py     # News display and pagination handlers
+│   │
 │   ├── database/
-│   │   ├── engine.py           # Async SQLAlchemy engine & session maker
-│   │   ├── models.py           # SQLAlchemy News ORM model
-│   │   └── crud.py             # Asynchronous database CRUD operations
-│   └── services/
-│       ├── async_parser.py     # Async BBC news web parser
-│       ├── ai_formatter.py     # Gemini AI processing module
-│       └── publisher.py        # Telegram channel publishing service
-├── .env                        # Environment variables configuration
-├── config.py                   # Application settings loader
-├── main.py                     # Primary application entry point
-└── requirements.txt            # Project dependencies
+│   │   ├── create_tables.py     # Database table initialization
+│   │   ├── crud.py              # Database CRUD operations
+│   │   ├── engine.py            # Async SQLAlchemy engine/session setup
+│   │   └── models.py            # SQLAlchemy ORM models
+│   │
+│   ├── services/
+│   │   ├── ai_formatter.py      # Gemini AI processing
+│   │   ├── async_parser.py      # Asynchronous BBC news parser
+│   │   └── scheduler.py         # Scheduled news-processing pipeline
+│   │
+│   └── config.py                # Application configuration
+│
+├── .env.example                 # Environment variable template
+├── .gitignore
+├── README.md
+├── requirements.txt
+└── ...
 ```
 
 ---
 
-🗄 Database Schema
+## 🗄 Database Schema
 
-The **`news`** table maintains the complete lifecycle of scraped and processed news items:
+The application uses a relational database to persist news and users.
+
+### `news`
+The `news` table stores the complete lifecycle of collected articles.
 
 | Column | Type | Description |
-|---|---|---|
-| `id` | Integer (PK) | Unique record identifier |
-| `title` | String | Original raw headline scraped from BBC |
-| `summary` | Text | Original raw summary text |
-| `location` | String | Geographic location or news category|
-| `published_date` | DateTime / String | Publication timestamp|
-| `formatted_title` | String | Enhanced title generated by Gemini AI|
-| `formatted_summary` | Text | Concise summary generated by Gemini AI |
-| `formatted_analysis` | Text | Analytical insight generated by Gemini AI |
-| `is_formatted` | Boolean | Processing status flag (`True`/`False`)|
-| `is_published` | Boolean | Telegram channel publication status flag (`True`/`False`) |
+| :--- | :--- | :--- |
+| `id` | Integer | Primary key |
+| `title` | String | Original headline collected from BBC |
+| `summary` | Text | Original article summary |
+| `location` | String | Geographic region associated with the article |
+| `published_date` | DateTime | Article publication date |
+| `formatted_title` | String | AI-generated title |
+| `formatted_summary` | Text | AI-generated concise summary |
+| `formatted_analysis`| Text | AI-generated analysis |
+| `is_formatted` | Boolean | Whether AI processing has completed |
 
-`users` Table
-Stores registered users and their subscription preferences:
+The `is_formatted` flag allows the scheduler to distinguish between:
+```text
+Raw article ──► is_formatted = False ──► AI processing ──► is_formatted = True
+```
+
+### `users`
+The `users` table stores Telegram users and their subscription state.
 
 | Column | Type | Description |
-|---|---|---|
-| `id` | Integer (PK) | Unique internal user identifier |
-| `telegram_id` | BigInteger (Unique) | User's unique Telegram ID |
-| `subscribed` | Boolean | Newsletter subscription status (`True`/`False`) |
-| `created_at` | DateTime | Registration timestamp |
+| :--- | :--- | :--- |
+| `id` | Integer | Internal primary key |
+| `telegram_id` | BigInteger | Telegram user identifier |
+| `is_subscribed` | Boolean | Subscription status |
+| `created_at` | DateTime | User registration timestamp |
 
 ---
 
-⚡ Data Pipeline Workflow
+## ⚡ Automated Data Pipeline
 
-1. **Scraping**: `run_parser()` collects top stories from BBC and saves them to the database with `is_formatted=False`.
-2. **AI Enrichment**: `process_unformatted_news()` queries raw entries, passes them to Gemini AI, writes formatted metadata, and sets `is_formatted=True`.
-3. **Delivery**: Handlers serve structured news slides using `get_latest_5_formatted_news()` and dynamic paginators
-
----
-
-🤖 Bot Interface & Navigation
-
-* `/start` / `/menu` — Launches the main menu with a dynamic subscription toggle button (`🔔 Subscribe` / `🔕 Unsubscribe`).
-* /newss (Admin Only) — Triggers the automated ETL orchestrator:
-* **Interactive News Browser**: Browse processed news with dynamic paginated inline controls (`⬅️ Previous`, `Page X/Y`, `➡️ Next`) and direct navigation options.
+1. **Extraction:** The parser collects news from BBC sources (`run_parser()`) and passes structured data to the database layer.
+2. **Loading Raw Data:** Checks whether an article already exists before inserting (`is_formatted = False`).
+3. **AI Transformation:** The scheduler processes unformatted records via Gemini API and sets `is_formatted = True`.
+4. **Telegram Delivery:** Processed news is retrieved via CRUD queries and presented through inline keyboards (`single_slide()`).
 
 ---
 
-## 🚀 Quick Start
+## ⏰ Scheduler
 
+The project uses APScheduler for automated background execution.
+- Initialized in `app/bot/main.py`.
+- Executes processing functions from `app/services/scheduler.py`.
+- Configured with timezone: `Europe/Kiev`.
 
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/spirit-breaker228/BBC-Telegram-bot.git
-cd BBC-Telegram-bot
+```text
+Scheduler ──► run_parser() ──► Save new news ──► process_unformatted_news() ──► AI-formatted news
 ```
 
-### 2. Create a virtual environment
+---
 
-```bash
-python -m venv venv
+## 📄 Pagination & Navigation
+
+### Database Pagination
+Calculation formula: `offset = page * page_size`.
+```text
+Page 0 ──► OFFSET 0
+Page 1 ──► OFFSET 5
+Page 2 ──► OFFSET 10
 ```
 
-**Windows (PowerShell):**
-
-```powershell
-.\venv\Scripts\Activate.ps1
+### Regional Pagination
+Regional news uses structured callback data containing `region` and `page`:
+```text
+User selects region ──► RegionNewsCallback ──► region = selected, page = 0 ──► Display article & build keyboard
 ```
 
-**Linux / macOS:**
+---
 
-```bash
-source venv/bin/activate
+## 🤖 Telegram Bot Interface
+
+- `/start` — Initializes the user and opens the main menu.
+- `/menu` — Returns the user to the main menu.
+- **Latest News** — Displays the most recent AI-processed articles.
+- **Regions** — Allows users to select a region and browse regional news.
+- **Subscription** — Allows users to explicitly change their subscription status.
+
+Example Interface:
+```text
+┌───────────────────────────────┐
+│       📰 Latest News           │
+├───────────────────────────────┤
+│  ⬅️ Previous   1/10   ➡️ Next │
+├───────────────────────────────┤
+│          🔙 Back               │
+└───────────────────────────────┘
 ```
 
-### 3. Install dependencies
+---
 
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Configure environment variables
+## 🔐 Environment Configuration
 
 Create a `.env` file in the project root:
 
@@ -156,25 +274,105 @@ BOT_TOKEN=your_telegram_bot_token
 GEMINI_API_KEY=your_gemini_api_key
 ```
 
-Replace the placeholder values with your actual API credentials.
+- **`BOT_TOKEN`**: Telegram Bot API token obtained from [@BotFather](https://t.me/BotFather).
+- **`GEMINI_API_KEY`**: Google Gemini API key obtained from Google AI Studio.
 
-* `BOT_TOKEN` — Telegram bot token obtained from [@BotFather](https://t.me/BotFather).
-* `GEMINI_API_KEY` — Google Gemini API key obtained from [Google AI Studio](https://aistudio.google.com/).
+> ⚠️ **Security Notice:** Never commit `.env` or API credentials to the repository.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/spirit-breaker228/BBC-Telegram-bot-.git
+cd BBC-Telegram-bot-
+```
+
+### 2. Create and activate a virtual environment
+- **Windows:**
+  ```powershell
+  python -m venv venv
+  .\venv\Scripts\Activate.ps1
+  ```
+- **Linux / macOS:**
+  ```bash
+  python3 -m venv venv
+  source venv/bin/activate
+  ```
+
+### 3. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure environment variables
+Copy `.env.example` to `.env` and fill in your credentials.
 
 ### 5. Run the application
-
+Run the bot module directly:
 ```bash
-python main.py
+python -m app.bot.main
 ```
 
-The bot should start polling for incoming Telegram updates.
-
-### 6. Open the bot in Telegram
-
-Send:
-
+The application initialization sequence:
 ```text
-/start
+Initialize database ──► Create Bot ──► Register routers ──► Start scheduler ──► Start polling
 ```
 
-to initialize the bot and open the main menu.
+---
+
+## 🧪 Development Considerations
+
+### Database Reliability
+The current deduplication performs a `SELECT` check before `INSERT`. Concurrent execution may theoretically lead to race conditions. A production-ready enhancement includes:
+- Stable article identifier or canonical URL.
+- Database-level unique constraints.
+- Atomic `UPSERT` statements and explicit `IntegrityError` handling.
+
+### Query Efficiency & Performance
+To eliminate N+1 query patterns and unnecessary DB round-trips:
+- Batch queries & bulk inserts.
+- Database-level upserts.
+
+---
+
+## 📈 Future Improvements
+
+- [ ] Canonical URL or Source ID article identification.
+- [ ] Safe concurrency deduplication mechanisms.
+- [ ] Database migrations integration (Alembic).
+- [ ] Automated unit and integration test suite.
+- [ ] CI/CD automation pipelines.
+- [ ] Advanced metrics, logging, and monitoring.
+
+---
+
+## 🧠 Engineering Concepts Demonstrated
+
+- **Python & Async:** `asyncio`, asynchronous programming, modular architecture.
+- **Telegram Bot Development:** `aiogram 3.x`, routers, handlers, inline keyboards, dynamic pagination, callback data.
+- **Database Engineering:** SQLAlchemy 2.0 Async, ORM models, CRUD architecture, filtering, indexing, limit/offset pagination.
+- **System Architecture:** Clean architecture, separation of concerns, scheduled background workflows, third-party API integration (Gemini AI, BBC RSS/HTML).
+
+---
+
+## 📊 Current Project Status
+
+**Status:** Active Development
+
+### Implemented Features:
+- [x] Asynchronous BBC news parser
+- [x] Database persistence & title deduplication
+- [x] Gemini AI automated formatting & analysis
+- [x] Interactive Telegram navigation & regional filtering
+- [x] Background scheduler integration (APScheduler)
+- [x] User management & subscription handling
+
+---
+
+## 📌 Repository & Contact
+
+- **GitHub Repository:** [https://github.com/spirit-breaker228/BBC-Telegram-bot-](https://github.com/spirit-breaker228/BBC-Telegram-bot-)
+- **Author:** Makarii
+- **Focus:** Backend Development, Asynchronous Python, Telegram Bots, AI Integrations, Automated ETL Pipelines.
