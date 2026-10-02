@@ -1,7 +1,10 @@
 import asyncio
+import logging
 from curl_cffi import AsyncSession
 from app.database.crud import save_news
-from datetime import datetime
+from datetime import datetime, timezone
+    
+logger = logging.getLogger(__name__)
 
 async def fetch_page(session, page, url, headers):
     """
@@ -13,7 +16,7 @@ async def fetch_page(session, page, url, headers):
         "size": "9",
         "path": "/news/world",
     }
-    response = await session.get(url, params=params, headers=headers)
+    response = await session.get(url, params=params, headers=headers, timeout=10.0)
 
     response.raise_for_status()
 
@@ -21,25 +24,26 @@ async def fetch_page(session, page, url, headers):
     news = data.get("data", [])
     page_data = []
     for item in news:
+        news_id = item.get("id")
         news_title = item.get("title")
         news_sum = item.get("summary")
-        if not news_title or not news_sum:
-            continue  # Skip if title or summary is missing
+        if not news_id or not news_title or not news_sum:
+            continue  
         topics = item.get("topics") or []
 
         news_location = topics[0] if topics else "Без категорії"
 
         news_time = item.get("lastPublishedAt")
         if news_time:
-            date_str = clean_time = news_time.split(".")[0].replace("Z", "")
-            published_date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
+            published_date = datetime.fromisoformat(news_time.replace("Z", "+00:00"))
         else:
-            published_date = datetime.now()
+            published_date = datetime.now(timezone.utc)
         page_data.append(
             {
-                "Title": news_title,
-                "Sum": news_sum,
-                "Location": news_location,
+                "bbc_news_ID": news_id,
+                "title": news_title,
+                "summary": news_sum,
+                "location": news_location,
                 "published_date": published_date,
             }
         )
@@ -60,9 +64,9 @@ async def get_news(
         "sec-ch-ua": '"Google Chrome";v="147", "Not.A/Brand";v="8", "Chromium";v="147"',
         "sec-ch-ua-mobile": "?0",
     }
-    async with AsyncSession(impersonate="chrome124") as session:
+    async with AsyncSession(impersonate="chrome124", timeout=15.0) as session:
         tasks = []
-        for page in range(2):
+        for page in range(1, 6):
             task = fetch_page(
                 session,
                 page,
@@ -72,10 +76,12 @@ async def get_news(
 
             tasks.append(task)
 
-        result = await asyncio.gather(*tasks)
+        result = await asyncio.gather(*tasks, return_exceptions=True)
         all_data = []
         for page in result:
-
+            if isinstance(page, Exception):
+                logger.exception(f"Error fetching page: {page}")
+                continue
             all_data.extend(page)
         return all_data
 
@@ -85,7 +91,5 @@ async def run_parser():
     Runs the news parser and saves the collected news data to the database.
     """
     news_data = await get_news()
-    print(f"Collected {len(news_data)}.")
-
     await save_news(news_data)
-    print("Done")
+    logger.info("Done")

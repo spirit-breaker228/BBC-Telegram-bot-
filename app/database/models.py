@@ -6,8 +6,10 @@ from datetime import datetime
 class News(Base):
     __tablename__ = "news"
     id: Mapped[int] = mapped_column(primary_key=True)
+    bbc_news_ID: Mapped[str] = mapped_column(String, unique=True, nullable=False)
 
-    title: Mapped[str] = mapped_column(String, unique=True, nullable=True)
+
+    title: Mapped[str] = mapped_column(String, nullable=False)
     summary: Mapped[str] = mapped_column(String)
     # Category
     location: Mapped[str] = mapped_column(String)

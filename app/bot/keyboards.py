@@ -7,16 +7,23 @@ def get_main_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="🗞 Latest News", callback_data="get_latest_news")],
-            [InlineKeyboardButton(text="📩 Subscribe to Newsletter", callback_data="subscribe")],
+            [InlineKeyboardButton(text="📩 Subscribe status", callback_data="subscribe_status")],
             [InlineKeyboardButton(text="🌍 Regions", callback_data="open_regions_menu")]
         ]
     )
-def get_subscribe_keyboard():
-    return InlineKeyboardMarkup(
+
+def subscribe_keyboard():
+        return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🗞 Latest News", callback_data="get_latest_news")],
-            [InlineKeyboardButton(text="📤 Unsubscribe from Newsletter", callback_data="unsubscribe")],
-            [InlineKeyboardButton(text="🌍 Regions", callback_data="open_regions_menu")]
+            [InlineKeyboardButton(text="🔔 Subscribe", callback_data="subscribe")],
+            [InlineKeyboardButton(text="🔙 Back to menu", callback_data="back")],
+        ]
+    )
+def unsubscribe_keyboard():
+        return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="❌ Unsubscribe", callback_data="unsubscribe")],
+            [InlineKeyboardButton(text="🔙 Back to menu", callback_data="back")],
         ]
     )
 class NewsPaginatorCallback(CallbackData, prefix="news_page"):
@@ -35,26 +42,39 @@ def get_news_keyboard(current_page: int, totals: int):
     builder.button(
         text="➡️ Next", callback_data=NewsPaginatorCallback(page=next_page).pack()
     )
-    builder.adjust(3)  # Adjust buttons to be in a single row
+    builder.adjust(3)  
+
+    builder_back = InlineKeyboardBuilder()
+    builder_back.button(text="🔙 Back to menu", callback_data="back")
+    builder_back.adjust(1)
+    builder.attach(builder_back)
     return builder.as_markup()
+
+
 
 class RegionNewsCallback(CallbackData, prefix="reg_news"):
     page : int
     region : Optional[str] = None
 
-def get_region_keyboard(region_name: str = None, page: int = 0, totals: int = 0):
+def get_region_keyboard(available_regions):
     builder = InlineKeyboardBuilder()
-    regions = ["Europe", "Middle East", "Asia", "US & Canada", "Africa"]
-
-    for reg in regions:
+    for reg in available_regions:
         builder.button(
-            text= reg, callback_data = RegionNewsCallback(region= reg, page = 0).pack()
+            text= reg, callback_data = RegionNewsCallback(region= reg, page=0).pack()
         )
+    builder.button(text="🔙 Back to menu", callback_data="back")
     builder.adjust(1)
-    paginator_builder = InlineKeyboardBuilder()
-    paginator_builder.button(text="⬅️ Previous", callback_data=RegionNewsCallback(region=region_name, page=page-1 if page > 0 else totals - 1).pack())
-    paginator_builder.button(text=f"Page {page + 1}/{totals}", callback_data="ignore")
-    paginator_builder.button(text="➡️ Next", callback_data=RegionNewsCallback(region=region_name, page=page+1 if page < totals - 1 else 0).pack())
-    paginator_builder.adjust(3)
-    builder.attach(paginator_builder)
+    return builder.as_markup()
+
+
+def get_regions_pagination(region, page: int = 0,  totals: int = 0):
+    builder = InlineKeyboardBuilder()
+    builder.button(text="⬅️ Previous", callback_data=RegionNewsCallback(region=region, page=page-1 if page > 0 else totals - 1).pack())
+    builder.button(text=f"Page {page + 1}/{totals}", callback_data="ignore")
+    builder.button(text="➡️ Next", callback_data=RegionNewsCallback(region=region, page=page+1 if page < totals - 1 else 0).pack())
+    builder.adjust(3)
+    builder_back = InlineKeyboardBuilder()
+    builder_back.button(text="🔙 Back to regions", callback_data="back_to_regions")
+    builder_back.adjust(1)
+    builder.attach(builder_back)
     return builder.as_markup()

@@ -11,7 +11,10 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.services.scheduler import run_scheduler
 
 async def main():
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+    )
    
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -23,7 +26,6 @@ async def main():
     scheduler = AsyncIOScheduler(timzone="Europe/Kiev")
     job = scheduler.add_job(run_scheduler, "interval", hours=2, kwargs={'bot': bot})
     scheduler.start()
-    # Delete webhook and drop pending updates to ensure the bot starts fresh
     await bot.delete_webhook(drop_pending_updates=True)
     print("🤖 Start!")
     await dp.start_polling(bot)

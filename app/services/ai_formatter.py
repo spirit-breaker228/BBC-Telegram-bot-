@@ -1,5 +1,6 @@
 import asyncio
-from sqlalchemy import select
+import logging
+from sqlalchemy import select, update
 from pydantic import BaseModel, Field
 
 from google import genai
@@ -10,8 +11,8 @@ from app.database.models import News
 from app.config import API_TOKEN
 
 
-client = genai.Client(api_key=API_TOKEN)
 
+logger = logging.getLogger(__name__)
 
 class FormattedNews(BaseModel):
     """
@@ -32,61 +33,79 @@ async def process_unformatted_news():
     """
     This function retrieves unformatted news from the database, sends them to the AI for formatting, and updates the database with the formatted results.
     """
-    print("Searching for unformatted news")
+    logger.info("Searching for unformatted news")
+    
+    client = genai.Client(api_key=API_TOKEN)
 
     async with SessionLocal() as session:
-
-        stmt = select(News).where(News.is_formatted == False).limit(6)
+        stmt = select(News.id, News.title, News.summary).where(News.is_formatted == False)
         result = await session.execute(stmt)
-        unformatted_news = result.scalars().all()
+        unformatted_news = result.all()
 
-        if not unformatted_news:
-            print("All news is formatted. No news to process.")
-            return
+    if not unformatted_news:
+        logger.info("All news is formatted. No news to process.")
+        return
 
-        print(f"Found {len(unformatted_news)} for processing.")
+    logger.info(f"Found {len(unformatted_news)} for processing.")
 
-        for news_item in unformatted_news:
-            print(f"Processing: {news_item.title[:10]}...")
+    for news_id, title, summary in unformatted_news:
+        logger.info("Processing: %s...", title[:10])
 
-            prompt = f"Original title: {news_item.title}\nOriginal text: {news_item.summary}"
-            max_retries = 5
-            for attempt in range(max_retries):
-                try:
-                  
-                    response = await client.aio.models.generate_content(
-                        model="gemini-3.6-flash",
-                        contents=f"""
-                            Translate and format this news article. 
-                            IMPORTANT: The total word count of the 'summary' and 'analysis' fields together must be exactly 80-100 words.
-                            Write concisely, objectively, and to the point.
-                            
-                            Новина:
-                            {prompt}
-                        """,
-                        config=GenerateContentConfig(
-                            response_mime_type="application/json",
-                            response_schema=FormattedNews,
-                            temperature=0.3,
-                        ),
+        prompt = f"Original title: {title}\nOriginal text: {summary}"
+        max_retries = 3
+        
+        for attempt in range(max_retries):
+            try:
+                response = await client.aio.models.generate_content(
+                    model="gemini-3.6-flash", 
+                    contents=f"""
+                        Translate and format this news article. 
+                        IMPORTANT: The total word count of the 'summary' and 'analysis' fields together must be exactly 80-100 words.
+                        Write concisely, objectively, and to the point.
+                        
+                        News:
+                        {prompt}
+                    """,
+                    config=GenerateContentConfig(
+                        response_mime_type="application/json",
+                        response_schema=FormattedNews,
+                        temperature=0.3,
+                    ),
+                )
+                
+                if not response or not response.parsed:
+                    logger.warning(
+                        "Gemini returned an empty response for news ID=%s, attempt=%s",
+                        news_id,
+                        attempt + 1
                     )
-                    if not response or not response.parsed:
-                        print(f"⚠️ Unavailable response for ID: {news_item.id}")
-                        continue    
-                    ai_data = response.parsed
-                    news_item.formatted_title = ai_data.title
-                    news_item.formatted_summary = ai_data.summary
-                    news_item.formatted_analysis = ai_data.analysis
-                    news_item.is_formatted = True  
-                    print("✅ Success!")
-                    await session.commit() 
-                    await asyncio.sleep(10)  
-                except Exception as e:
-                    print(f"❌ Error processing news: {e}")
-                    if attempt < max_retries - 1:
-                        print("Retrying...")
-                        await asyncio.sleep(10) 
-                    else:
-                        print("All attempts failed. Skipping this news item.")
+                    continue
+                    
+                ai_data = response.parsed
+                
+                async with SessionLocal() as write_session:
+                    stmt = update(News).where(News.id == news_id).values(
+                        formatted_title=ai_data.title,
+                        formatted_summary=ai_data.summary,
+                        formatted_analysis=ai_data.analysis,
+                        is_formatted=True
+                    )
+                    await write_session.execute(stmt)
+                    await write_session.commit()
 
-        print("All changes successfully saved to the database!")
+                logger.info("Successfully formatted news ID=%s", news_id)
+                break  
+                
+            except Exception:
+                logger.exception(
+                    "Error while processing news ID=%s, attempt=%s",
+                    news_id,
+                    attempt + 1
+                )
+                if attempt < max_retries - 1:
+                    logger.warning("Retrying...")
+                    await asyncio.sleep(5) 
+                else:
+                    logger.error("All attempts failed for news ID=%s. Skipping this news item.", news_id)
+                    
+    logger.info("All changes successfully saved to the database!")
