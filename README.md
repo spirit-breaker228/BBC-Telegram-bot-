@@ -138,28 +138,28 @@ Responsible for application-level operations outside the Telegram interface:
 bbc-project/
 │
 ├── app/
-│   │
-│   ├── bot/
-│   │   ├── admin_handlers.py    # Administrative Telegram handlers
-│   │   ├── handlers.py          # Main bot commands and callbacks
-│   │   ├── keyboards.py         # Inline keyboard builders
-│   │   ├── main.py              # Application entry point
-│   │   └── news_handlers.py     # News display and pagination handlers
-│   │
-│   ├── database/
-│   │   ├── create_tables.py     # Database table initialization
-│   │   ├── crud.py              # Database CRUD operations
-│   │   ├── engine.py            # Async SQLAlchemy engine/session setup
-│   │   └── models.py            # SQLAlchemy ORM models
-│   │
-│   ├── services/
-│   │   ├── ai_formatter.py      # Gemini AI processing
-│   │   ├── async_parser.py      # Asynchronous BBC news parser
-│   │   └── scheduler.py         # Scheduled news-processing pipeline
-│   │
-│   └── config.py                # Application configuration
+│   │
+│   ├── bot/
+│   │   ├── admin_handlers.py    # Administrative Telegram handlers
+│   │   ├── handlers.py          # Main bot commands and callbacks
+│   │   ├── keyboards.py         # Inline keyboard builders
+│   │   ├── main.py              # Application entry point
+│   │   └── news_handlers.py     # News display and pagination handlers
+│   │
+│   ├── database/
+│   │   ├── create_tables.py     # Database table initialization
+│   │   ├── crud.py              # Database CRUD operations
+│   │   ├── engine.py            # Async SQLAlchemy engine/session setup
+│   │   └── models.py            # SQLAlchemy ORM models
+│   │
+│   ├── services/
+│   │   ├── ai_formatter.py      # Gemini AI processing
+│   │   ├── async_parser.py      # Asynchronous BBC news parser
+│   │   └── scheduler.py         # Scheduled news-processing pipeline
+│   │
+│   └── config.py                # Application configuration
 │
-├── .env.example                 # Environment variable template
+├── .env.example                 # Environment variable template
 ├── .gitignore
 ├── README.md
 ├── requirements.txt
@@ -255,11 +255,11 @@ User selects region ──► RegionNewsCallback ──► region = selected, pa
 Example Interface:
 ```text
 ┌───────────────────────────────┐
-│       📰 Latest News           │
+│       📰 Latest News           │
 ├───────────────────────────────┤
-│  ⬅️ Previous   1/10   ➡️ Next │
+│  ⬅️ Previous   1/10   ➡️ Next │
 ├───────────────────────────────┤
-│          🔙 Back               │
+│          🔙 Back               │
 └───────────────────────────────┘
 ```
 
@@ -291,15 +291,15 @@ cd BBC-Telegram-bot-
 
 ### 2. Create and activate a virtual environment
 - **Windows:**
-  ```powershell
-  python -m venv venv
-  .\venv\Scripts\Activate.ps1
-  ```
+  ```powershell
+  python -m venv venv
+  .\venv\Scripts\Activate.ps1
+  ```
 - **Linux / macOS:**
-  ```bash
-  python3 -m venv venv
-  source venv/bin/activate
-  ```
+  ```bash
+  python3 -m venv venv
+  source venv/bin/activate
+  ```
 
 ### 3. Install dependencies
 ```bash
@@ -370,9 +370,3 @@ To eliminate N+1 query patterns and unnecessary DB round-trips:
 - [x] User management & subscription handling
 
 ---
-
-## 📌 Repository & Contact
-
-- **GitHub Repository:** [https://github.com/spirit-breaker228/BBC-Telegram-bot-](https://github.com/spirit-breaker228/BBC-Telegram-bot-)
-- **Author:** Makarii
-- **Focus:** Backend Development, Asynchronous Python, Telegram Bots, AI Integrations, Automated ETL Pipelines.
