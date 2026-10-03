@@ -70,7 +70,7 @@ async def get_news_pagination_by_region(callback: CallbackQuery, callback_data: 
     try:
         await callback.message.edit_text(text, parse_mode="HTML", reply_markup=markup)
     except Exception as e:
-        await callback.answer(f"Error: {str(e)}", show_alert=True)
+        await callback.answer("Error: Failed to update news display.", show_alert=True)
 
 
      
