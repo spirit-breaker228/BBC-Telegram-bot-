@@ -23,7 +23,6 @@ class News(Base):
     formatted_analysis: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Flag to indicate if the news has been formatted by AI
-    is_published: Mapped[bool] = mapped_column(default=False, nullable=False)
     is_formatted: Mapped[bool] = mapped_column(default=False, nullable=False)
 
 class Users(Base):

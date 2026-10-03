@@ -1,12 +1,16 @@
 from aiogram import Bot
+import logging
+
+
 from app.database.crud import get_news_pagination, count_news, subscribed_user
 from app.services.async_parser import run_parser
 from app.services.ai_formatter import process_unformatted_news
 from app.bot.keyboards import get_news_keyboard
 from app.bot.news_handlers import single_slide
 
+logger = logging.getLogger(__name__)
 async def run_scheduler(bot):
-    print("🕒 Scheduler started.")
+    logger.info("🕒 Scheduler started.")
     await run_parser()
     await process_unformatted_news()
 
@@ -14,7 +18,7 @@ async def run_scheduler(bot):
     total = await count_news()
     users = await subscribed_user()
     if not news or not users:
-        print("⚠️ No formatted news available or users to send to.")
+        logger.warning("⚠️ No formatted news available or users to send to.")
         return
 
     text = single_slide(news)
@@ -25,5 +29,7 @@ async def run_scheduler(bot):
             await bot.send_message(chat_id=user_id, text=text, reply_markup=markup, parse_mode="HTML")
             count += 1
         except Exception as e:
-            print(f"⚠️ Failed to send news to user {user_id}: {e}")
-    print(f"✅ [Scheduler] News sent to {count} users.")
+            logger.error(f"⚠️ Failed to send news to user {user_id}: {e}")
+            continue
+        
+    logger.info(f"✅ [Scheduler] News sent to {count} users.")

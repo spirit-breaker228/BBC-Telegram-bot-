@@ -1,6 +1,6 @@
 import html
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import CallbackQuery
 import html
 
 from app.bot.keyboards import get_news_keyboard, get_region_keyboard,get_regions_pagination,get_main_keyboard,NewsPaginatorCallback, RegionNewsCallback

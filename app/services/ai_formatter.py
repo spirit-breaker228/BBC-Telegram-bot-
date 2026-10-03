@@ -8,7 +8,7 @@ from google.genai.types import GenerateContentConfig
 
 from app.database.engine import SessionLocal
 from app.database.models import News
-from app.config import API_TOKEN
+from app.config import GEMINI_API_KEY
 
 
 
@@ -35,7 +35,7 @@ async def process_unformatted_news():
     """
     logger.info("Searching for unformatted news")
     
-    client = genai.Client(api_key=API_TOKEN)
+    client = genai.Client(api_key=GEMINI_API_KEY)
 
     async with SessionLocal() as session:
         stmt = select(News.id, News.title, News.summary).where(News.is_formatted == False)

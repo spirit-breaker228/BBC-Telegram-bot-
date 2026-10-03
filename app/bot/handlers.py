@@ -1,9 +1,8 @@
 from operator import isub
 
 from aiogram import Router, F
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery
-import html
 
 from app.bot.keyboards import get_main_keyboard, unsubscribe_keyboard, subscribe_keyboard, get_region_keyboard, get_news_keyboard
 from app.database.crud import register_user, check_status, subscribe

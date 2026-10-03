@@ -43,11 +43,10 @@ async def get_news_pagination(page: int):
     
 async def count_news():
     async with SessionLocal() as session:
-        stmt = select(func.count()).select_from(News).where(News.is_formatted== True).order_by(News.published_date.desc()).limit(1)
+        stmt = select(func.count()).select_from(News).where(News.is_formatted== True)
         result = await session.execute(stmt)
         return result.scalars().one()
-    
-    
+
     """Subscribe service"""
 
 async def register_user(telegram_id):

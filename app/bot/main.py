@@ -24,10 +24,9 @@ async def main():
     dp.include_router(admin_router)
     dp.include_router(news_router)
     scheduler = AsyncIOScheduler(timzone="Europe/Kiev")
-    job = scheduler.add_job(run_scheduler, "interval", hours=2, kwargs={'bot': bot})
+    job = scheduler.add_job(run_scheduler, "interval", hours=3, kwargs={'bot': bot})
     scheduler.start()
     await bot.delete_webhook(drop_pending_updates=True)
-    print("🤖 Start!")
     await dp.start_polling(bot)
 
 
