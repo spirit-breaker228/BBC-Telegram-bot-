@@ -26,6 +26,7 @@ async def markup_for_pagination(callback: CallbackQuery ,page):
     total = await count_news()
     if not news:
         await callback.answer("⚠️ No news available")
+        return
     text = single_slide(news)
     markup = get_news_keyboard(current_page=page, totals=total)
     await callback.message.edit_text(
