@@ -228,14 +228,6 @@ Scheduler ──► run_parser() ──► Save new news ──► process_unfor
 
 ## 📄 Pagination & Navigation
 
-### Database Pagination
-Calculation formula: `offset = page * page_size`.
-```text
-Page 0 ──► OFFSET 0
-Page 1 ──► OFFSET 5
-Page 2 ──► OFFSET 10
-```
-
 ### Regional Pagination
 Regional news uses structured callback data containing `region` and `page`:
 ```text
@@ -248,6 +240,7 @@ User selects region ──► RegionNewsCallback ──► region = selected, pa
 
 - `/start` — Initializes the user and opens the main menu.
 - `/menu` — Returns the user to the main menu.
+- `/newss` — Manual Data Entry into the Database.
 - **Latest News** — Displays the most recent AI-processed articles.
 - **Regions** — Allows users to select a region and browse regional news.
 - **Subscription** — Allows users to explicitly change their subscription status.
