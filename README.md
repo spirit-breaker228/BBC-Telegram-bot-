@@ -40,7 +40,7 @@ The application uses SQLAlchemy 2.0 Async for database access. Stored news conta
 - formatting status.
 
 ### 🔎 News Deduplication
-Before inserting a new article, the application checks whether a corresponding news record already exists. The current deduplication approach uses the article title as the identifying value.
+Before inserting a new article, the application checks whether a corresponding news record already exists. The current deduplication approach uses the article bbc_news_ID as the identifying value.
 
 > **Note:** Title-based deduplication is suitable for the current project but is not a perfect article identity strategy. A stable article URL or source-specific article ID would be a stronger production solution.
 
@@ -356,7 +356,7 @@ To eliminate N+1 query patterns and unnecessary DB round-trips:
 
 ### Implemented Features:
 - [x] Asynchronous BBC news parser
-- [x] Database persistence & title deduplication
+- [x] Database persistence & bbc_news_ID deduplication
 - [x] Gemini AI automated formatting & analysis
 - [x] Interactive Telegram navigation & regional filtering
 - [x] Background scheduler integration (APScheduler)
