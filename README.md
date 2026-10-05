@@ -265,6 +265,8 @@ Create a `.env` file in the project root:
 ```env
 BOT_TOKEN=your_telegram_bot_token
 GEMINI_API_KEY=your_gemini_api_key
+ADMIN_CHAT_ID=your_telegram_chat_id
+DATABASE_URL=sqlite_connection_URI
 ```
 
 - **`BOT_TOKEN`**: Telegram Bot API token obtained from [@BotFather](https://t.me/BotFather).
